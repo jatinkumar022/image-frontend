@@ -31,7 +31,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/remove-background",
+        "https://image-backend-u2dd.onrender.com/remove-background",
         formData,
         { responseType: "blob" }
       );
@@ -60,7 +60,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/upload",
+        "https://image-backend-u2dd.onrender.com/upload",
         formData
       );
 
@@ -68,7 +68,7 @@ function App() {
       const { processed_image_url } = response.data;
 
       // Ensure the URL is correctly prefixed with base URL if necessary
-      const imageUrl = `http://localhost:5000${processed_image_url}`;
+      const imageUrl = `https://image-backend-u2dd.onrender.com${processed_image_url}`;
       setProcessedImage(imageUrl);
     } catch (err) {
       setError("Error enhancing quality");
