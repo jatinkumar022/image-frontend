@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { CircularProgress, Snackbar, Alert, Button } from "@mui/material";
-import "./App.css"; // Import the custom CSS
+import "./App.css";
 
 function App() {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -10,11 +10,13 @@ function App() {
   const [error, setError] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
+  const backendUrl = "https://image-backend-u2dd.onrender.com"; // Your deployed backend URL
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    setSelectedImage(file); // Use the file object directly
-    setProcessedImage(null); // Clear previously processed image
-    setLoading(false); // Reset loading state
+    setSelectedImage(file);
+    setProcessedImage(null);
+    setLoading(false);
   };
 
   const handleRemoveBackground = async () => {
@@ -27,16 +29,17 @@ function App() {
     setLoading(true);
 
     const formData = new FormData();
-    formData.append("image", selectedImage); // Send the file object directly
+    formData.append("image", selectedImage);
 
     try {
       const response = await axios.post(
-        "https://image-backend-u2dd.onrender.com/remove-background",
-        formData,
-        { responseType: "blob" }
+        `${backendUrl}/remove-background`,
+        formData
       );
 
-      const imageUrl = URL.createObjectURL(response.data);
+      // Extract the URL for the processed image
+      const { processed_image_url } = response.data;
+      const imageUrl = `${backendUrl}${processed_image_url}`;
       setProcessedImage(imageUrl);
     } catch (err) {
       setError("Error removing background");
@@ -56,19 +59,14 @@ function App() {
     setLoading(true);
 
     const formData = new FormData();
-    formData.append("image", selectedImage); // Send the file object directly
+    formData.append("image", selectedImage);
 
     try {
-      const response = await axios.post(
-        "https://image-backend-u2dd.onrender.com/upload",
-        formData
-      );
+      const response = await axios.post(`${backendUrl}/upload`, formData);
 
-      // Assuming your backend returns URLs for processed images
+      // Extract the URL for the processed image
       const { processed_image_url } = response.data;
-
-      // Ensure the URL is correctly prefixed with base URL if necessary
-      const imageUrl = `https://image-backend-u2dd.onrender.com${processed_image_url}`;
+      const imageUrl = `${backendUrl}${processed_image_url}`;
       setProcessedImage(imageUrl);
     } catch (err) {
       setError("Error enhancing quality");
@@ -101,7 +99,7 @@ function App() {
           accept="image/*"
           onChange={handleImageUpload}
           className="file-input"
-          style={{ display: "none" }} // Hide the default file input
+          style={{ display: "none" }}
         />
         <Button
           className="selectBtn"
