@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { CircularProgress, Snackbar, Alert, Button } from "@mui/material";
-import "./App.css";
+import "./App.css"; // Import the custom CSS
 
 function App() {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -10,13 +10,13 @@ function App() {
   const [error, setError] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  const backendUrl = "https://image-backend-u2dd.onrender.com"; // Your deployed backend URL
-
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    setSelectedImage(file);
-    setProcessedImage(null);
-    setLoading(false);
+    if (file) {
+      setSelectedImage(file);
+      setProcessedImage(null);
+      setError("");
+    }
   };
 
   const handleRemoveBackground = async () => {
@@ -33,14 +33,15 @@ function App() {
 
     try {
       const response = await axios.post(
-        `${backendUrl}/remove-background`,
+        "https://image-backend-u2dd.onrender.com/remove-background",
         formData
       );
 
-      // Extract the URL for the processed image
       const { processed_image_url } = response.data;
-      const imageUrl = `${backendUrl}${processed_image_url}`;
-      setProcessedImage(imageUrl);
+
+      // Use the full live URL for the processed image
+      const imageUrl = `https://image-backend-u2dd.onrender.com${processed_image_url}`;
+      setProcessedImage(imageUrl); // Set the processed image URL
     } catch (err) {
       setError("Error removing background");
       setSnackbarOpen(true);
@@ -51,33 +52,48 @@ function App() {
 
   const handleEnhanceQuality = async () => {
     if (!selectedImage) {
-      setError("Please upload an image first");
-      setSnackbarOpen(true);
+      showError("Please upload an image first");
       return;
     }
 
     setLoading(true);
-
     const formData = new FormData();
     formData.append("image", selectedImage);
 
     try {
-      const response = await axios.post(`${backendUrl}/upload`, formData);
+      const response = await axios.post(
+        "https://image-backend-u2dd.onrender.com/upload",
+        formData
+      );
 
-      // Extract the URL for the processed image
       const { processed_image_url } = response.data;
-      const imageUrl = `${backendUrl}${processed_image_url}`;
+      const imageUrl = `https://image-backend-u2dd.onrender.com${processed_image_url}`;
       setProcessedImage(imageUrl);
     } catch (err) {
-      setError("Error enhancing quality");
-      setSnackbarOpen(true);
+      showError("Error enhancing image quality");
     } finally {
       setLoading(false);
     }
   };
 
+  const showError = (message) => {
+    setError(message);
+    setSnackbarOpen(true);
+  };
+
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
+    setError("");
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      setSelectedImage(file);
+      setProcessedImage(null);
+      setError("");
+    }
   };
 
   return (
@@ -86,12 +102,8 @@ function App() {
       <div
         className="dropzone"
         onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault();
-          const file = e.dataTransfer.files[0];
-          setSelectedImage(file);
-          setProcessedImage(null);
-        }}
+        onDrop={handleDrop}
+        onClick={() => document.querySelector(".file-input").click()}
       >
         <p>Drag and drop an image here or click to select</p>
         <input
@@ -101,12 +113,6 @@ function App() {
           className="file-input"
           style={{ display: "none" }}
         />
-        <Button
-          className="selectBtn"
-          onClick={() => document.querySelector(".file-input").click()}
-        >
-          Select Image
-        </Button>
       </div>
       <div className="btn-container">
         <Button
